@@ -2,8 +2,6 @@ package pk.pitb.cnic_ocr_detection.views
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import android.graphics.Rect
-import android.graphics.RectF
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -20,21 +18,27 @@ import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory
+import androidx.camera.core.UseCaseGroup
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import pk.pitb.cnic_ocr_detection.OCRManager
 import pk.pitb.cnic_ocr_detection.R
+import pk.pitb.cnic_ocr_detection.utils.compressBitmapToByteArray
+import pk.pitb.cnic_ocr_detection.utils.toUprightViewportBitmap
 import pk.pitb.cnic_ocr_detection.views.urduExtractor.CnicAlignmentAnalyzer
 import pk.pitb.cnic_ocr_detection.views.urduExtractor.CnicCameraOverlay
-import pk.pitb.cnic_ocr_detection.views.urduExtractor.CnicFieldZones
-import pk.pitb.cnic_ocr_detection.views.urduExtractor.CnicUrduCropper
-import pk.pitb.cnic_ocr_detection.views.urduExtractor.CroppedUrduField
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CardOcrResult
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CnicFieldParser
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CnicFields
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CnicLineExtractor
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.LineCrop
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.UTRNetRecognizer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import androidx.camera.core.UseCaseGroup
+
 class IdCardOcrPreviewActivity : AppCompatActivity() {
 
     private lateinit var previewView: PreviewView
@@ -42,12 +46,15 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
 
     private var cameraProvider: ProcessCameraProvider? = null
-    private var latestFrameBitmap: Bitmap? = null
 
     // Auto-capture parameters
     private var isCapturing = false
     private val autoCaptureHandler = Handler(Looper.getMainLooper())
     private var autoCaptureRunnable: Runnable? = null
+
+    var imageByteArray: ByteArray? = null
+    private lateinit var lineExtractor: CnicLineExtractor
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,6 +69,11 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         cameraOverlay = findViewById(R.id.cameraOverlay)
         cameraExecutor = Executors.newSingleThreadExecutor()
+
+        val glyphsText = assets.open("UrduGlyphs.txt").bufferedReader().use { it.readText() }
+        val urduRecognizer = UTRNetRecognizer(this, glyphsText)
+        lineExtractor = CnicLineExtractor(urduRecognizer)
+
 
         // Reveal overlay and start scanning
         cameraOverlay.visibility = View.VISIBLE
@@ -85,26 +97,43 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
                 .build()
 
             // Initialize Alignment Analyzer
+//            val alignmentAnalyzer = CnicAlignmentAnalyzerold(
+//                overlay = cameraOverlay,
+//                onAlignmentChanged = { isAligned ->
+//                    handleAutoCaptureLogic(isAligned)
+//                }
+//            )
             val alignmentAnalyzer = CnicAlignmentAnalyzer(
-                overlay = cameraOverlay,
-                onAlignmentChanged = { isAligned ->
-                    handleAutoCaptureLogic(isAligned)
+                cameraOverlay,
+                onAlignmentChanged = { isAligned, validationAnotatedMap, cardBmp ->
+                    imageByteArray = compressBitmapToByteArray(cardBmp)
+                    handleAutoCaptureLogic(
+                        isAligned,
+                        validationAnotatedMap,
+                        cardBmp
+                    )
                 }
             )
 
+//            imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
+//                latestFrameBitmap = imageProxy.toBitmap()
+//                alignmentAnalyzer.analyzeImage(imageProxy)
+//            }
             imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                latestFrameBitmap = imageProxy.toBitmap()
-                alignmentAnalyzer.analyzeImage(imageProxy)
+                val bitmap = imageProxy.toUprightViewportBitmap()
+                imageProxy.close()
+                alignmentAnalyzer.analyzeImage(bitmap)
             }
+
 
             val cameraSelector = CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                 .build()
 
-           /* try {
-                cameraProvider?.unbindAll()
-                val camera = cameraProvider?.bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
-*/
+            /* try {
+                 cameraProvider?.unbindAll()
+                 val camera = cameraProvider?.bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
+ */
             val viewPort = previewView.viewPort
             if (viewPort == null) {
                 Log.e("IdCardOcrPreview", "previewView not laid out yet — retrying")
@@ -126,7 +155,8 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
                     val factory = SurfaceOrientedMeteringPointFactory(
                         previewView.width.toFloat(), previewView.height.toFloat()
                     )
-                    val focusPoint = factory.createPoint(previewView.width / 2f, previewView.height / 2f)
+                    val focusPoint =
+                        factory.createPoint(previewView.width / 2f, previewView.height / 2f)
                     val action = FocusMeteringAction.Builder(focusPoint)
                         .setAutoCancelDuration(3, TimeUnit.SECONDS)
                         .build()
@@ -139,17 +169,21 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun handleAutoCaptureLogic(isAligned: Boolean) {
+    private fun handleAutoCaptureLogic(
+        isAligned: Boolean,
+        validationAnotatedMap: Bitmap,
+        cardBmp: Bitmap
+    ) {
         runOnUiThread {
             if (isAligned && !isCapturing) {
                 if (autoCaptureRunnable == null) {
                     autoCaptureRunnable = Runnable {
                         if (!isCapturing) {
-                            triggerFrameCapture()
+                            triggerFrameCapture(validationAnotatedMap, cardBmp)
                         }
                     }
                     // Trigger capture when target anchors stay aligned for 600ms
-                    autoCaptureHandler.postDelayed(autoCaptureRunnable!!, 600)
+                    autoCaptureHandler.postDelayed(autoCaptureRunnable!!, 50)
                 }
             } else {
                 // Reset capture handler if card moves out of alignment
@@ -161,54 +195,31 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
         }
     }
 
-    private fun triggerFrameCapture() {
+    private fun triggerFrameCapture(validationAnotatedMap: Bitmap, cardBmp: Bitmap) {
         if (isCapturing) return
         isCapturing = true
-
-        latestFrameBitmap?.let { rawBitmap ->
+        try {
             stopCamera()
-
-            // Transform Overlay Card Rect coordinates onto the high-res Bitmap space
-            val cardBounds = cameraOverlay.cardBounds
-            val scaleX = rawBitmap.width.toFloat() / cameraOverlay.width.toFloat()
-            val scaleY = rawBitmap.height.toFloat() / cameraOverlay.height.toFloat()
-
-            val cropX = (cardBounds.left * scaleX).toInt().coerceAtLeast(0)
-            val cropY = (cardBounds.top * scaleY).toInt().coerceAtLeast(0)
-            val cropWidth = (cardBounds.width() * scaleX).toInt().coerceAtMost(rawBitmap.width - cropX)
-            val cropHeight = (cardBounds.height() * scaleY).toInt().coerceAtMost(rawBitmap.height - cropY)
-
-            val cardCroppedBitmap = Bitmap.createBitmap(rawBitmap, cropX, cropY, cropWidth, cropHeight)
-            // Extract individual sub-fields directly
-            val extractedFields = extractFieldsDirectly(cardCroppedBitmap)
-// Draw overlay bounding boxes on full card preview bitmap
-            val annotatedCardBitmap = drawBoundingBoxesOnCard(cardCroppedBitmap)
-            // Render preview dialog on UI thread
-            runOnUiThread {
-                showExtractedFieldsDialog(annotatedCardBitmap, extractedFields)
-            }
-
-            // Show dialog with cardCroppedBitmap on Main UI Thread
-           /* runOnUiThread {
-                showCroppedImageDialog(cardCroppedBitmap)
-            }*/
-            // Run CNIC Extraction pipeline
-        /*    val cropper = CnicUrduCropper()
-            cropper.processCnicImage(
-                cnicBitmap = cardCroppedBitmap,
-                onSuccess = { result ->
-                    // Return result or handle extraction
-                    Toast.makeText(this, "CNIC captured successfully!", Toast.LENGTH_SHORT).show()
-                    finish()
+            lineExtractor.extract(
+                //  cardBmp = cardBmp,
+                cardBmp = validationAnotatedMap,
+                onResult = { result: CardOcrResult ->
+                    val fields = CnicFieldParser.parse(result)
+                    showLineExtractionDialog(result, fields,validationAnotatedMap)
                 },
-                onFailure = { error ->
+                onFailure = { e ->
+                    Log.e("IdCardOcrPreview", "Line extraction failed", e)
+                    Toast.makeText(
+                        this,
+                        "Extraction failed: ${e.localizedMessage}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     isCapturing = false
-                    Toast.makeText(this, "Capture failed: ${error.localizedMessage}", Toast.LENGTH_SHORT).show()
-                    startCamera() // Restart live camera on failure
+                    startCamera()
                 }
-            )*/
-        } ?: run {
-            isCapturing = false
+            )
+        }catch (e: Exception){
+            e.printStackTrace()
         }
     }
 
@@ -222,155 +233,146 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
         super.onDestroy()
         stopCamera()
         cameraExecutor.shutdown()
+        lineExtractor.shutdown()
     }
 
-
-    private fun showCroppedImageDialog(bitmap: Bitmap) {
-        val imageView = ImageView(this).apply {
-            setImageBitmap(bitmap)
-            adjustViewBounds = true
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            val padding = (16 * resources.displayMetrics.density).toInt()
-            setPadding(padding, padding, padding, padding)
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle("Captured Card Preview")
-            .setView(imageView)
-            .setCancelable(false)
-            .setPositiveButton("Use Image") { dialog, _ ->
-                dialog.dismiss()
-                finish()
-            }
-            .setNegativeButton("Retake") { dialog, _ ->
-                dialog.dismiss()
-                isCapturing = false
-                startCamera() // Resume camera scanning
-            }
-            .show()
-    }
-    private fun extractFieldsDirectly(cardCroppedBitmap: Bitmap): List<CroppedUrduField> {
-        val crops = mutableListOf<CroppedUrduField>()
-        val bw = cardCroppedBitmap.width.toFloat()
-        val bh = cardCroppedBitmap.height.toFloat()
-        cropZone(cardCroppedBitmap, CnicFieldZones.HEADER)?.let { crops.add(CroppedUrduField("Header", it)) }
-        cropZone(cardCroppedBitmap, CnicFieldZones.NAME_LABEL)?.let { crops.add(CroppedUrduField("English Name Label", it)) }
-        cropZone(cardCroppedBitmap, CnicFieldZones.NAME_URDU)?.let { crops.add(CroppedUrduField("Urdu Name", it)) }
-        cropZone(cardCroppedBitmap, CnicFieldZones.FATHER_LABEL)?.let { crops.add(CroppedUrduField("English Father Name Label", it)) }
-        cropZone(cardCroppedBitmap, CnicFieldZones.FATHER_URDU)?.let { crops.add(CroppedUrduField("Urdu Father Name", it)) }
-        cropZone(cardCroppedBitmap, CnicFieldZones.SIGNATURE_TEXT)?.let { crops.add(CroppedUrduField("Signature Text", it)) }
-        return crops
-    }
-    private fun cropZone(bitmap: Bitmap, zone: RectF): Bitmap? {
-        val bw = bitmap.width.toFloat()
-        val bh = bitmap.height.toFloat()
-        val x = (bw * zone.left).toInt().coerceIn(0, bitmap.width - 1)
-        val y = (bh * zone.top).toInt().coerceIn(0, bitmap.height - 1)
-        val w = (bw * (zone.right - zone.left)).toInt().coerceAtMost(bitmap.width - x)
-        val h = (bh * (zone.bottom - zone.top)).toInt().coerceAtMost(bitmap.height - y)
-        return if (w <= 0 || h <= 0) null else Bitmap.createBitmap(bitmap, x, y, w, h)
-    }
-    private fun showExtractedFieldsDialog(fullCard: Bitmap, fields: List<CroppedUrduField>) {
+    private fun showLineExtractionDialog(
+        result: CardOcrResult,
+        fields: CnicFields,
+        validationAnotatedMap: Bitmap
+    ) {
         val context = this
         val density = resources.displayMetrics.density
-
-        // Scrollable container
         val scrollView = android.widget.ScrollView(context).apply {
-            setPadding((12 * density).toInt(), (12 * density).toInt(), (12 * density).toInt(), (12 * density).toInt())
+            setPadding(
+                (12 * density).toInt(),
+                (12 * density).toInt(),
+                (12 * density).toInt(),
+                (12 * density).toInt()
+            )
         }
-
         val container = android.widget.LinearLayout(context).apply {
             orientation = android.widget.LinearLayout.VERTICAL
         }
 
-        // 1. Section Header: Full Card
-        val fullCardLabel = android.widget.TextView(context).apply {
-            text = "FULL CNIC CROP"
+        fun addKeyValue(label: String, value: String?) {
+            container.addView(android.widget.TextView(context).apply {
+                text = "$label: ${value ?: "—"}"
+                textSize = 13f
+                setPadding(0, (2 * density).toInt(), 0, (2 * density).toInt())
+            })
+        }
+
+        fun sectionLabel(text: String) = android.widget.TextView(context).apply {
+            this.text = text
             setTypeface(null, android.graphics.Typeface.BOLD)
             textSize = 14f
-            setPadding(0, 0, 0, (6 * density).toInt())
+            setPadding(0, (12 * density).toInt(), 0, (6 * density).toInt())
         }
-        container.addView(fullCardLabel)
 
-        // Full Card ImageView
-        val fullCardView = ImageView(context).apply {
-            setImageBitmap(fullCard)
+        fun addCropRow(crop: LineCrop, heightDp: Int = 50) {
+            val row = android.widget.LinearLayout(context).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(
+                    (8 * density).toInt(),
+                    (8 * density).toInt(),
+                    (8 * density).toInt(),
+                    (8 * density).toInt()
+                )
+                setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = (6 * density).toInt() }
+            }
+            row.addView(android.widget.TextView(context).apply {
+                text = "${crop.label}: ${crop.recognizedText}"
+                textSize = 11f
+                setTextColor(android.graphics.Color.DKGRAY)
+            })
+            row.addView(ImageView(context).apply {
+                setImageBitmap(crop.bitmap)
+                adjustViewBounds = true
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    (heightDp * density).toInt()
+                )
+            })
+            container.addView(row)
+        }
+
+        // --- 1. Top Section: Validation Annotated Map ---
+        container.addView(sectionLabel("VALIDATION ANNOTATED MAP"))
+        container.addView(ImageView(context).apply {
+            setImageBitmap(validationAnotatedMap)
             adjustViewBounds = true
             scaleType = ImageView.ScaleType.FIT_CENTER
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = (16 * density).toInt()
+            ).apply { bottomMargin = (8 * density).toInt() }
+        })
+
+        container.addView(sectionLabel("EXTRACTED FIELDS"))
+        addKeyValue("Name", fields.name)
+        addKeyValue("Name (Urdu)", fields.nameUrdu)
+        addKeyValue("Father Name", fields.fatherName)
+        addKeyValue("Father Name (Urdu)", fields.fatherNameUrdu)
+        addKeyValue("Gender", fields.gender)
+        addKeyValue("Country of Stay", fields.countryOfStay)
+        addKeyValue("Identity Number", fields.identityNumber)
+        addKeyValue("Date of Birth", fields.dateOfBirth)
+        addKeyValue("Date of Issue", fields.dateOfIssue)
+        addKeyValue("Date of Expiry", fields.dateOfExpiry)
+
+        // --- Add Debug Blocks Section ---
+        if (fields.debugBlocks.isNotEmpty()) {
+            container.addView(sectionLabel("DEBUG BLOCKS"))
+            fields.debugBlocks.forEach { (blockName, rawText) ->
+                addKeyValue(blockName, rawText.ifEmpty { "N/A" })
             }
         }
-        container.addView(fullCardView)
 
-        // Divider
-        val divider = View(context).apply {
-            setBackgroundColor(android.graphics.Color.LTGRAY)
+        Log.d("resultData","$fields")
+
+        container.addView(sectionLabel("ANNOTATED CARD (all lines + Urdu regions)"))
+        container.addView(ImageView(context).apply {
+            setImageBitmap(result.annotatedBitmap)
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.FIT_CENTER
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                (1 * density).toInt()
-            ).apply {
-                bottomMargin = (12 * density).toInt()
-            }
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = (8 * density).toInt() }
+        })
+
+        result.urduNameCrop?.let {
+            container.addView(sectionLabel("URDU NAME"))
+            addCropRow(it, heightDp = 60)
         }
-        container.addView(divider)
-
-        // 2. Section Header: Extracted Key Fields
-        val fieldsLabel = android.widget.TextView(context).apply {
-            text = "EXTRACTED FIELD REGIONS"
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            textSize = 14f
-            setPadding(0, 0, 0, (8 * density).toInt())
+        result.urduFatherNameCrop?.let {
+            container.addView(sectionLabel("URDU FATHER NAME"))
+            addCropRow(it, heightDp = 60)
         }
-        container.addView(fieldsLabel)
 
-        // Render individual field crops
-        fields.forEach { field ->
-            val itemLayout = android.widget.LinearLayout(context).apply {
-                orientation = android.widget.LinearLayout.VERTICAL
-                setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
-                setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
-                layoutParams = android.widget.LinearLayout.LayoutParams(
-                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    bottomMargin = (10 * density).toInt()
-                }
-            }
-
-            val fieldTitle = android.widget.TextView(context).apply {
-                text = field.fieldName
-                setTypeface(null, android.graphics.Typeface.BOLD)
-                textSize = 12f
-                setTextColor(android.graphics.Color.DKGRAY)
-            }
-
-            val fieldImageView = ImageView(context).apply {
-                setImageBitmap(field.croppedBitmap)
-                adjustViewBounds = true
-                scaleType = ImageView.ScaleType.FIT_CENTER
-                layoutParams = android.widget.LinearLayout.LayoutParams(
-                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                    (60 * density).toInt()
-                )
-            }
-
-            itemLayout.addView(fieldTitle)
-            itemLayout.addView(fieldImageView)
-            container.addView(itemLayout)
-        }
+        container.addView(sectionLabel("ALL DETECTED LINES (${result.lineCrops.size})"))
+        result.lineCrops.forEach { addCropRow(it) }
 
         scrollView.addView(container)
 
         AlertDialog.Builder(context)
-            .setTitle("Extracted CNIC Data")
+            .setTitle("CNIC OCR Extraction")
             .setView(scrollView)
             .setCancelable(false)
             .setPositiveButton("Accept") { dialog, _ ->
-                dialog.dismiss()
+
+                OCRManager.ocrDetectionResult.onOcrDetection(
+                    fields,
+                    imageByteArray,
+                )
+
+                dialog.dismiss();
                 finish()
             }
             .setNegativeButton("Retake") { dialog, _ ->
@@ -381,54 +383,4 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun drawBoundingBoxesOnCard(sourceCard: Bitmap): Bitmap {
-        // 1. Create a mutable copy of the cropped card bitmap to draw onto
-        val annotatedBitmap = sourceCard.copy(Bitmap.Config.ARGB_8888, true)
-        val canvas = android.graphics.Canvas(annotatedBitmap)
-
-        val width = annotatedBitmap.width.toFloat()
-        val height = annotatedBitmap.height.toFloat()
-
-        // 2. Configure paints for borders and text labels
-        val boxPaint = android.graphics.Paint().apply {
-            style = android.graphics.Paint.Style.STROKE
-            strokeWidth = (1 * resources.displayMetrics.density)
-            color = android.graphics.Color.GREEN
-            isAntiAlias = true
-        }
-
-        val labelPaint = android.graphics.Paint().apply {
-            color = android.graphics.Color.GREEN
-            textSize = (8 * resources.displayMetrics.density)
-            isAntiAlias = true
-            typeface = android.graphics.Typeface.DEFAULT
-        }
-
-        // 3. Define zones to render on the overlay bitmap
-        val zonesToDraw = listOf(
-            "Header" to CnicFieldZones.HEADER,
-            "Name Label" to CnicFieldZones.NAME_LABEL,
-            "Urdu Name" to CnicFieldZones.NAME_URDU,
-            "Father Label" to CnicFieldZones.FATHER_LABEL,
-            "Urdu Father Name" to CnicFieldZones.FATHER_URDU,
-            "Signature" to CnicFieldZones.SIGNATURE_TEXT
-        )
-
-        // 4. Draw each bounding box and its corresponding label
-        zonesToDraw.forEach { (label, zone) ->
-            val rect = RectF(
-                width * zone.left,
-                height * zone.top,
-                width * zone.right,
-                height * zone.bottom
-            )
-            // Draw outline rectangle
-            canvas.drawRect(rect, boxPaint)
-
-            // Draw small label tag slightly above or inside the zone
-            canvas.drawText(label, rect.left + 4f, rect.top + labelPaint.textSize, labelPaint)
-        }
-
-        return annotatedBitmap
-    }
 }

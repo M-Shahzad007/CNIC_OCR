@@ -8,7 +8,6 @@ import pk.pitb.cnic_ocr_detection.callbacks.OcrDetectionCallback
 import pk.pitb.cnic_ocr_detection.utils.hasPermission
 import pk.pitb.cnic_ocr_detection.utils.showPermissionDialog
 import pk.pitb.cnic_ocr_detection.views.IdCardOcrPreviewActivity
-import pk.pitb.cnic_ocr_detection.views.OcrActivity
 
 class OCRManager private constructor() {
 
@@ -57,13 +56,8 @@ class OCRManager private constructor() {
 
     private fun startOcrDetection(
         activity: Activity,
-    ) {/*
-        val intent = Intent(
-            activity, OcrActivity::class.java
-        )*/
-        val intent = Intent(
-            activity, IdCardOcrPreviewActivity::class.java
-        )
+    ) {
+        val intent = Intent( activity, IdCardOcrPreviewActivity::class.java )
         activity.startActivity(intent)
     }
 

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    android:orientation="vertical"
+    android:background="#F8F9FA"
+    android:fillViewport="true"
     tools:context=".MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -14,23 +14,128 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <LinearLayout
-            android:id="@+id/ll_existing_buttons"
+        <Button
+            android:id="@+id/open_orc_activity"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:layout_height="56dp"
+            android:text="Scan CNIC"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            app:cornerRadius="12dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <Button
-                android:id="@+id/open_orc_activity"
+        <!-- Media Preview Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_images"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/white"
+            android:visibility="visible"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp"
+            app:layout_constraintTop_toBottomOf="@id/open_orc_activity">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/open_orc_activity" />
+                android:orientation="vertical"
+                android:padding="16dp">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DOCUMENT &amp; FACE DETECTED"
+                    android:textColor="#6C757D"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="140dp"
+                    android:layout_marginTop="12dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <!-- Original CNIC Image -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.6"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:id="@+id/iv_cnic_full"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="#E9ECEF"
+                            android:scaleType="centerCrop"
+                            tools:src="@tools:sample/backgrounds/scenic" />
+                    </LinearLayout>
+
+                    <!-- Face Crop Preview -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:id="@+id/iv_cropped_face"
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
+                            android:background="#E9ECEF"
+                            android:scaleType="centerCrop"
+                            tools:src="@tools:sample/avatars" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Cropped Face"
+                            android:textColor="#495057"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Form Details Container -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_fields"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="visible"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp"
+            app:layout_constraintTop_toBottomOf="@id/card_images">
+
+            <LinearLayout
+                android:id="@+id/ll_fields_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="EXTRACTED DETAILS"
+                    android:textColor="#6C757D"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

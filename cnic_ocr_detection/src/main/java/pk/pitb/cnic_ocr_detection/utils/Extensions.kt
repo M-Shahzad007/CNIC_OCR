@@ -13,6 +13,7 @@ import android.media.Image
 import android.net.Uri
 import android.os.Environment
 import android.util.DisplayMetrics
+import android.util.Log
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy
 import androidx.core.content.FileProvider
@@ -122,4 +123,33 @@ fun Image.toBitmap2(rotationDegrees: Int): Bitmap {
     }
 
     return bitmap
+}
+
+
+@OptIn(ExperimentalGetImage::class)
+fun ImageProxy.toUprightViewportBitmap(): Bitmap {
+    val full = this.toBitmap()
+    val crop = this.cropRect
+
+    val safeLeft = crop.left.coerceIn(0, full.width - 1)
+    val safeTop = crop.top.coerceIn(0, full.height - 1)
+    val safeWidth = crop.width().coerceIn(1, full.width - safeLeft)
+    val safeHeight = crop.height().coerceIn(1, full.height - safeTop)
+
+    val fov = Bitmap.createBitmap(full, safeLeft, safeTop, safeWidth, safeHeight)
+
+    val rotation = this.imageInfo.rotationDegrees
+    return if (rotation != 0) {
+        val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
+        Bitmap.createBitmap(fov, 0, 0, fov.width, fov.height, matrix, true)
+    } else {
+        fov
+    }
+}
+
+fun compressBitmapToByteArray(bitmap: Bitmap, quality: Int = 100): ByteArray {
+    val stream = java.io.ByteArrayOutputStream()
+    // JPEG compression reduces raw Bitmap size by 70-90%
+    bitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
+    return stream.toByteArray()
 }

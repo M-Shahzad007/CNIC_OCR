@@ -1,4 +1,4 @@
-package pk.pitb.cnic_ocr_detection.views.urduExtractor
+package pk.pitb.cnic_ocr_detection.views.urduExtractor.helper
 
 import android.content.Context
 import android.graphics.Bitmap

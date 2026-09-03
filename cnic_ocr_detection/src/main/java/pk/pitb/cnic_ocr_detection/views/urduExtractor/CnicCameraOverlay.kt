@@ -1,9 +1,12 @@
+/*
 package pk.pitb.cnic_ocr_detection.views.urduExtractor
 
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CardGeometry
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CnicFieldZones
 
 class CnicCameraOverlay @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -57,136 +60,20 @@ class CnicCameraOverlay @JvmOverloads constructor(
         textSize = 28f
         isAntiAlias = true
     }
-
-    /*
-        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-            super.onSizeChanged(w, h, oldw, oldh)
-
-            // Standard CNIC Ratio in Landscape (~1.58)
-            val cardWidth = w * 0.88f
-            val cardHeight = cardWidth / 1.586f
-            val left = (w - cardWidth) / 2f
-            val top = (h - cardHeight) / 2f
-
-            cardBounds.set(left, top, left + cardWidth, top + cardHeight)
-
-            val cw = cardBounds.width()
-            val ch = cardBounds.height()
-            val cLeft = cardBounds.left
-            val cTop = cardBounds.top
-
-            // Relative Spatial Mapping matching Pakistani CNIC layout
-            headerBounds.set(cLeft + cw * 0.25f, cTop + ch * 0.02f, cLeft + cw * 0.78f, cTop + ch * 0.18f)
-            nameLabelBounds.set(cLeft + cw * 0.25f, cTop + ch * 0.19f, cLeft + cw * 0.50f, cTop + ch * 0.27f)
-            fatherNameLabelBounds.set(cLeft + cw * 0.25f, cTop + ch * 0.43f, cLeft + cw * 0.50f, cTop + ch * 0.51f)
-            signatureBounds.set(cLeft + cw * 0.68f, cTop + ch * 0.74f, cLeft + cw * 0.98f, cTop + ch * 0.98f)
-
-            // Exact crop coordinates for Urdu fields (Right side of name areas)
-            urduNameBounds.set(cLeft + cw * 0.25f, cTop + ch * 0.35f, cLeft + cw * 0.68f, cTop + ch * 0.44f)
-            urduFatherNameBounds.set(cLeft + cw * 0.25f, cTop + ch * 0.59f, cLeft + cw * 0.68f, cTop + ch * 0.68f)
-        }
-    */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
 
-        val cardWidth: Float
-        val cardHeight: Float
-
-        if (w > h) {
-            // Landscape Mode: Scale relative to screen height
-            cardHeight = h * 0.80f
-            cardWidth = cardHeight * 1.586f
-        } else {
-            // Portrait Fallback: Scale relative to screen width
-            cardWidth = w * 0.90f
-            cardHeight = cardWidth / 1.586f
-        }
-
-        //Centering the CNIC box
-        val left = (w - cardWidth) / 2f
-        val top = (h - cardHeight) / 2f
-
-        // Main Card Box Bounds
-        cardBounds.set(left, top, left + cardWidth, top + cardHeight)
-
-        val cw = cardBounds.width()
-        val ch = cardBounds.height()
-        val cLeft = cardBounds.left
-        val cTop = cardBounds.top
-
-        // Recalculate spatial sub-zones inside the Card Box
-
-        headerBounds.set(toCardSpace(CnicFieldZones.HEADER, cLeft, cTop, cw, ch))
-        nameLabelBounds.set(toCardSpace(CnicFieldZones.NAME_LABEL, cLeft, cTop, cw, ch))
-        urduNameBounds.set(toCardSpace(CnicFieldZones.NAME_URDU, cLeft, cTop, cw, ch))
-        fatherNameLabelBounds.set(toCardSpace(CnicFieldZones.FATHER_LABEL, cLeft, cTop, cw, ch))
-        urduFatherNameBounds.set(toCardSpace(CnicFieldZones.FATHER_URDU, cLeft, cTop, cw, ch))
-        footerBlock1Bounds.set(toCardSpace(CnicFieldZones.FOOTER_1, cLeft, cTop, cw, ch))
-        footerBlock2Bounds.set(toCardSpace(CnicFieldZones.FOOTER_2, cLeft, cTop, cw, ch))
-        footerBlock3Bounds.set(toCardSpace(CnicFieldZones.FOOTER_3, cLeft, cTop, cw, ch))
-        signatureTextBounds.set(toCardSpace(CnicFieldZones.SIGNATURE_TEXT, cLeft, cTop, cw, ch))
-        /*
-
-        headerBounds.set(
-            cLeft + cw * 0.22f,
-            cTop + ch * 0.03f,
-            cLeft + cw * 0.82f,
-            cTop + ch * 0.13f
-        )
-
-        nameLabelBounds.set(
-            cLeft + cw * 0.25f,
-            cTop + ch * 0.18f,
-            cLeft + cw * 0.65f,
-            cTop + ch * 0.23f
-        )
-        urduNameBounds.set(
-            cLeft + cw * 0.25f,
-            cTop + ch * 0.28f,
-            cLeft + cw * 0.68f,
-            cTop + ch * 0.38f
-        )
-
-
-        fatherNameLabelBounds.set(
-            cLeft + cw * 0.25f,
-            cTop + ch * 0.38f,
-            cLeft + cw * 0.65f,
-            cTop + ch * 0.43f
-        )
-        urduFatherNameBounds.set(
-            cLeft + cw * 0.25f,
-            cTop + ch * 0.47f,
-            cLeft + cw * 0.68f,
-            cTop + ch * 0.58f
-        )
-
-        //footerBlock1Bounds.set(cLeft + cw * 0.25f, cTop + ch * 0.58f, cLeft + cw * 0.68f, cTop + ch * 0.74f)
-        footerBlock1Bounds.set(
-            cLeft + cw * 0.25f,
-            cTop + ch * 0.58f,
-            cLeft + cw * 0.68f,
-            cTop + ch * 0.74f
-        )
-        footerBlock2Bounds.set(
-            cLeft + cw * 0.25f,
-            cTop + ch * 0.74f,
-            cLeft + cw * 0.68f,
-            cTop + ch * 0.86f
-        )
-        footerBlock3Bounds.set(cLeft + cw * 0.25f, cTop + ch * 0.86f, cLeft + cw * 0.68f, cTop + ch)
-
-        //   signatureBounds.set(cLeft + cw * 0.68f, cTop + ch * 0.72f, cLeft + cw * 0.96f, cTop + ch * 0.96f)
-        signatureTextBounds.set(
-            cLeft + cw * 0.68f,
-            cTop + ch * 0.90f,
-            cLeft + cw * 0.96f,
-            cTop + ch * 0.99f
-        )
-*/
-        // Exact Urdu Crop Regions relative to Card Box
+        cardBounds.set(CardGeometry.computeCardBounds(w.toFloat(), h.toFloat()))
+        headerBounds.set(CardGeometry.toCardSpace(CnicFieldZones.HEADER, cardBounds))
+        nameLabelBounds.set(CardGeometry.toCardSpace(CnicFieldZones.NAME_LABEL, cardBounds))
+        urduNameBounds.set(CardGeometry.toCardSpace(CnicFieldZones.NAME_URDU, cardBounds))
+        fatherNameLabelBounds.set(CardGeometry.toCardSpace(CnicFieldZones.FATHER_LABEL, cardBounds))
+        urduFatherNameBounds.set(CardGeometry.toCardSpace(CnicFieldZones.FATHER_URDU, cardBounds))
+        footerBlock1Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_1, cardBounds))
+        footerBlock2Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_2, cardBounds))
+        footerBlock3Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_3, cardBounds))
+        signatureTextBounds.set(CardGeometry.toCardSpace(CnicFieldZones.SIGNATURE_TEXT, cardBounds))
     }
-
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         setLayerType(LAYER_TYPE_SOFTWARE, null)
@@ -210,53 +97,15 @@ class CnicCameraOverlay @JvmOverloads constructor(
         }
 
         // 4. Draw Individual Field Regions with independent validation colors
-      //  drawGuideZone(headerBounds, isHeaderValid, "HEADER")
+        //  drawGuideZone(headerBounds, isHeaderValid, "HEADER")
         drawGuideZone(nameLabelBounds, isNameValid, "NAME")
-      /*  drawGuideZone(fatherNameLabelBounds, isFatherNameValid, "FATHER NAME")
+        drawGuideZone(fatherNameLabelBounds, isFatherNameValid, "FATHER NAME")
         drawGuideZone(signatureTextBounds, isSignatureValid, "SIGNATURE")
 
         // Passive guide regions (or link them to their respective parents if needed)
-        drawGuideZone(urduNameBounds, isNameValid, "NAME URDU")
-        drawGuideZone(urduFatherNameBounds, isFatherNameValid, "FATHER NAME URDU")
+//        drawGuideZone(urduNameBounds, isNameValid, "NAME URDU")
+//        drawGuideZone(urduFatherNameBounds, isFatherNameValid, "FATHER NAME URDU")
 
-        // Neutral guides (Footer blocks)
-        guideZonePaint.color = if (isAligned) Color.GREEN else Color.RED
-        canvas.drawRect(footerBlock1Bounds, guideZonePaint)
-        canvas.drawRect(footerBlock2Bounds, guideZonePaint)
-        canvas.drawRect(footerBlock3Bounds, guideZonePaint)*/
-//        guideZonePaint.color = if (isAligned) Color.GREEN else Color.parseColor("#AABFFFFF")
-      /*  guideZonePaint.color = if (isAligned) Color.GREEN else Color.RED
-
-        canvas.drawRect(headerBounds, guideZonePaint)
-        canvas.drawRect(nameLabelBounds, guideZonePaint)
-        canvas.drawRect(fatherNameLabelBounds, guideZonePaint)
-        // canvas.drawRect(signatureBounds, guideZonePaint)
-        canvas.drawRect(signatureTextBounds, guideZonePaint)
-
-        canvas.drawRect(footerBlock1Bounds, guideZonePaint)
-        canvas.drawRect(footerBlock2Bounds, guideZonePaint)
-        canvas.drawRect(footerBlock3Bounds, guideZonePaint)
-
-        canvas.drawRect(urduNameBounds, guideZonePaint)
-        canvas.drawRect(urduFatherNameBounds, guideZonePaint)
-
-        // Semi-transparent field guide labels
-        canvas.drawText("HEADER", headerBounds.left + 8f, headerBounds.top + 28f, labelPaint)
-        canvas.drawText("NAME", nameLabelBounds.left + 8f, nameLabelBounds.top + 24f, labelPaint)
-        canvas.drawText(
-            "FATHER NAME",
-            fatherNameLabelBounds.left + 8f,
-            fatherNameLabelBounds.top + 24f,
-            labelPaint
-        )
-
-        canvas.drawText("NAME URDU", urduNameBounds.left + 8f, urduNameBounds.top + 24f, labelPaint)
-        canvas.drawText(
-            "FATHER NAME URDU",
-            urduFatherNameBounds.left + 8f,
-            urduFatherNameBounds.top + 24f,
-            labelPaint
-        )*/
     }
 
     fun toCardSpace(zone: RectF, cLeft: Float, cTop: Float, cw: Float, ch: Float) =
@@ -278,8 +127,345 @@ class CnicCameraOverlay @JvmOverloads constructor(
         this.isNameValid = name
         this.isFatherNameValid = fatherName
         this.isSignatureValid = signature
-      //  this.isAligned = header && name && fatherName && signature
+        //  this.isAligned = header && name && fatherName && signature
         this.isAligned = name && fatherName && signature
+        postInvalidate()
+    }
+}*/
+
+
+package pk.pitb.cnic_ocr_detection.views.urduExtractor
+
+import android.animation.ValueAnimator
+import android.content.Context
+import android.graphics.*
+import android.util.AttributeSet
+import android.view.View
+import android.view.animation.LinearInterpolator
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CardGeometry
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CnicFieldZones
+
+class CnicCameraOverlay @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null
+) : View(context, attrs) {
+
+    val cardBounds = RectF()
+
+    val headerBounds = RectF()
+    val nameLabelBounds = RectF()
+    val fatherNameLabelBounds = RectF()
+
+    val footerBlock1Bounds = RectF()
+    val footerBlock2Bounds = RectF()
+    val footerBlock3Bounds = RectF()
+    val signatureBounds = RectF()
+    val signatureTextBounds = RectF()
+
+    val urduNameBounds = RectF()
+    val urduFatherNameBounds = RectF()
+
+    private var isAllAligned = false
+    private var anyFieldValid = false
+    var isHeaderValid = false
+    var isNameValid = false
+    var isFatherNameValid = false
+    var isIssueDateValid = false
+    var isSignatureValid = false
+
+    // ---------- Palette ----------
+    private val colorAccent = Color.parseColor("#00E5A0")      // success / aligned green-teal
+    private val colorWarn = Color.parseColor("#FF5A5A")        // pending — bright coral-red, high contrast
+    private val colorIdle = Color.parseColor("#FFFFFF")        // idle white
+    private val colorScrim = Color.parseColor("#B0000000")
+
+    // ---------- Paints ----------
+    private val backgroundPaint = Paint().apply { color = colorScrim }
+    private val clearPaint = Paint().apply { xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) }
+
+    private val cardOutlinePaint = Paint().apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2.5f
+        color = Color.parseColor("#40FFFFFF")
+        isAntiAlias = true
+    }
+
+    private val cornerPaint = Paint().apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 10f
+        strokeCap = Paint.Cap.ROUND
+        isAntiAlias = true
+        color = colorIdle
+    }
+
+    private val scanLinePaint = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.FILL
+    }
+
+    private val badgeBgPaint = Paint().apply { isAntiAlias = true }
+    private val badgeIconPaint = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.STROKE
+        strokeWidth = 4f
+        strokeCap = Paint.Cap.ROUND
+        color = Color.parseColor("#101418")
+    }
+    private val zoneHairlinePaint = Paint().apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 4f
+        isAntiAlias = true
+      //  pathEffect = DashPathEffect(floatArrayOf(10f, 6f), 0f)
+    }
+
+    private val statusPillBgPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.parseColor("#CC101418")
+    }
+    private val statusTextPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.WHITE
+        textSize = 34f
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    }
+    private val labelPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.parseColor("#E6FFFFFF")
+        textSize = 24f
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+    }
+
+    private val cornerLen = 56f
+    private val cornerRadius = 20f
+
+    // ---------- Animation ----------
+    private var scanProgress = 0f       // 0..1 sweep position
+    private var pulse = 0f              // 0..1 breathing value for "aligned" glow
+
+    private val scanAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+        duration = 1800
+        repeatCount = ValueAnimator.INFINITE
+    //    repeatMode = ValueAnimator.RESTART
+        repeatMode = ValueAnimator.REVERSE
+        interpolator = LinearInterpolator()
+        addUpdateListener {
+            scanProgress = it.animatedValue as Float
+            if (!anyFieldValid) postInvalidateOnAnimation()
+        }
+    }
+
+    private val pulseAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+        duration = 900
+        repeatCount = ValueAnimator.INFINITE
+        repeatMode = ValueAnimator.REVERSE
+        addUpdateListener {
+            pulse = it.animatedValue as Float
+            if (anyFieldValid) postInvalidateOnAnimation()
+        }
+    }
+
+    init {
+        setLayerType(LAYER_TYPE_SOFTWARE, null)
+        scanAnimator.start()
+        pulseAnimator.start()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        scanAnimator.cancel()
+        pulseAnimator.cancel()
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        cardBounds.set(CardGeometry.computeCardBounds(w.toFloat(), h.toFloat()))
+
+        headerBounds.set(CardGeometry.toCardSpace(CnicFieldZones.HEADER, cardBounds))
+        nameLabelBounds.set(CardGeometry.toCardSpace(CnicFieldZones.NAME_LABEL, cardBounds))
+        urduNameBounds.set(CardGeometry.toCardSpace(CnicFieldZones.NAME_URDU, cardBounds))
+        fatherNameLabelBounds.set(CardGeometry.toCardSpace(CnicFieldZones.FATHER_LABEL, cardBounds))
+        urduFatherNameBounds.set(CardGeometry.toCardSpace(CnicFieldZones.FATHER_URDU, cardBounds))
+        footerBlock1Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_1, cardBounds))
+        footerBlock2Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_2, cardBounds))
+        footerBlock3Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_3, cardBounds))
+        signatureTextBounds.set(CardGeometry.toCardSpace(CnicFieldZones.SIGNATURE_TEXT, cardBounds))
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        // 1. Scrim with clear cutout for the card
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
+        canvas.drawRoundRect(cardBounds, 24f, 24f, clearPaint)
+
+        // 2. Faint full outline so the frame reads even before alignment
+        canvas.drawRoundRect(cardBounds, 24f, 24f, cardOutlinePaint)
+
+        // 3. Corner brackets — the primary alignment cue
+        val activeColor = if (isAllAligned) colorAccent else colorIdle
+        cornerPaint.color = activeColor
+        if (isAllAligned) {
+            // soft glow via increasing alpha-blended stroke width on pulse
+            cornerPaint.alpha = (200 + pulse * 55).toInt()
+        } else {
+            cornerPaint.alpha = 255
+        }
+        drawCorners(canvas, cardBounds, cornerPaint)
+
+        // 4. Scan line sweep while searching for alignment
+        if (!anyFieldValid) {
+            drawScanLine(canvas, cardBounds)
+        }
+
+        // 5. Field zones as subtle dashed hairlines + small corner badges (not solid boxes)
+        drawFieldZone(canvas, headerBounds, isHeaderValid, "Header")
+//        drawFieldZone(canvas, nameLabelBounds, isNameValid, "Name")
+//        drawFieldZone(canvas, fatherNameLabelBounds, isFatherNameValid, "Father's Name")
+        drawFieldZone(canvas, signatureTextBounds, isSignatureValid, "Signature")
+        drawFieldZone(canvas, footerBlock3Bounds, isIssueDateValid, "Issue date")
+
+        // 6. Status pill under the card
+        drawStatusPill(canvas)
+    }
+
+    private fun drawCorners(canvas: Canvas, r: RectF, paint: Paint) {
+        // Top-left
+        canvas.drawPath(Path().apply {
+            moveTo(r.left, r.top + cornerLen)
+            lineTo(r.left, r.top + cornerRadius)
+            quadTo(r.left, r.top, r.left + cornerRadius, r.top)
+            lineTo(r.left + cornerLen, r.top)
+        }, paint)
+        // Top-right
+        canvas.drawPath(Path().apply {
+            moveTo(r.right - cornerLen, r.top)
+            lineTo(r.right - cornerRadius, r.top)
+            quadTo(r.right, r.top, r.right, r.top + cornerRadius)
+            lineTo(r.right, r.top + cornerLen)
+        }, paint)
+        // Bottom-left
+        canvas.drawPath(Path().apply {
+            moveTo(r.left, r.bottom - cornerLen)
+            lineTo(r.left, r.bottom - cornerRadius)
+            quadTo(r.left, r.bottom, r.left + cornerRadius, r.bottom)
+            lineTo(r.left + cornerLen, r.bottom)
+        }, paint)
+        // Bottom-right
+        canvas.drawPath(Path().apply {
+            moveTo(r.right - cornerLen, r.bottom)
+            lineTo(r.right - cornerRadius, r.bottom)
+            quadTo(r.right, r.bottom, r.right, r.bottom - cornerRadius)
+            lineTo(r.right, r.bottom - cornerLen)
+        }, paint)
+    }
+
+    private fun drawScanLine(canvas: Canvas, r: RectF) {
+        val y = r.top + r.height() * scanProgress
+        val shader = LinearGradient(
+            r.left, y, r.right, y,
+            intArrayOf(Color.TRANSPARENT, Color.parseColor("#9900E5A0"), Color.TRANSPARENT),
+            floatArrayOf(0f, 0.5f, 1f),
+            Shader.TileMode.CLAMP
+        )
+        scanLinePaint.shader = shader
+       // canvas.drawRect(r.left, y - 1.5f, r.right, y + 1.5f, scanLinePaint)
+        canvas.drawRect(r.left, y - 4f, r.right, y + 4f, scanLinePaint)
+    }
+
+    private val zoneLabelBgPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.parseColor("#B3101418")   // semi-dark, ~70% opacity
+    }
+
+    private fun drawFieldZone(canvas: Canvas, bounds: RectF, valid: Boolean, label: String) {
+        val color = if (valid) colorAccent else colorWarn
+        // Solid, fully-opaque outline — no low-contrast alpha blending
+        zoneHairlinePaint.color = color
+        canvas.drawRoundRect(bounds, 8f, 8f, zoneHairlinePaint)
+
+        // ---- Header row: badge + label side-by-side, sitting just above the box ----
+        val badgeR = 17f                       // bigger badge
+        val rowGap = 10f                       // gap between row and box
+        val rowCenterY = bounds.top - rowGap - badgeR
+        val cx = bounds.left + badgeR
+
+        // Background pill behind the badge + label so text stays legible over any
+        // camera content (skin, paper, patterned backgrounds, etc.)
+        val textWidth = labelPaint.measureText(label)
+        val pillPadH = 10f
+        val pillPadV = 8f
+        val pillLeft = cx - badgeR - pillPadH
+        val pillRight = cx + badgeR + 10f + textWidth + pillPadH
+        val pillTop = rowCenterY - badgeR - pillPadV
+        val pillBottom = rowCenterY + badgeR + pillPadV
+        canvas.drawRoundRect(
+            RectF(pillLeft, pillTop, pillRight, pillBottom),
+            (pillBottom - pillTop) / 2, (pillBottom - pillTop) / 2,
+            zoneLabelBgPaint
+        )
+
+        // Badge circle
+        badgeBgPaint.color = color
+        canvas.drawCircle(cx, rowCenterY, badgeR, badgeBgPaint)
+        if (valid) {
+            val path = Path().apply {
+                moveTo(cx - 7f, rowCenterY)
+                lineTo(cx - 2f, rowCenterY + 5.5f)
+                lineTo(cx + 7f, rowCenterY - 5.5f)
+            }
+            canvas.drawPath(path, badgeIconPaint)
+        } else {
+            badgeIconPaint.style = Paint.Style.FILL
+            canvas.drawCircle(cx, rowCenterY, 3.5f, badgeIconPaint)
+            badgeIconPaint.style = Paint.Style.STROKE
+        }
+
+        // Label, vertically centered against the badge, right next to it
+        val textY = rowCenterY - (labelPaint.descent() + labelPaint.ascent()) / 2
+        canvas.drawText(label, cx + badgeR + 10f, textY, labelPaint)
+    }
+
+    private fun drawStatusPill(canvas: Canvas) {
+        val fieldsOk = listOf(isNameValid, isFatherNameValid, isSignatureValid)
+        val doneCount = fieldsOk.count { it }
+        val message = when {
+            isAllAligned -> "Perfect — hold still"
+            doneCount == 0 -> "Position your CNIC inside the frame"
+            else -> "Adjusting… $doneCount/${fieldsOk.size} fields detected"
+        }
+
+        val padH = 28f
+        val padV = 16f
+        val textWidth = statusTextPaint.measureText(message)
+        val pillLeft = cardBounds.centerX() - textWidth / 2 - padH
+        val pillRight = cardBounds.centerX() + textWidth / 2 + padH
+        val pillTop = cardBounds.bottom + 28f
+        val pillBottom = pillTop + statusTextPaint.textSize + padV * 2 - statusTextPaint.textSize / 2
+
+        val pillRect = RectF(pillLeft, pillTop, pillRight, pillBottom)
+        canvas.drawRoundRect(pillRect, pillRect.height() / 2, pillRect.height() / 2, statusPillBgPaint)
+
+        statusTextPaint.color = if (isAllAligned) colorAccent else Color.WHITE
+        val textY = pillRect.centerY() - (statusTextPaint.descent() + statusTextPaint.ascent()) / 2
+        canvas.drawText(message, cardBounds.centerX(), textY, statusTextPaint)
+    }
+
+    fun setAlignmentStatus(aligned: Boolean) {
+        if (isAllAligned != aligned) {
+            isAllAligned = aligned
+            postInvalidate()
+        }
+    }
+
+    fun setFieldStatuses(header: Boolean, name: Boolean, fatherName: Boolean, issueDate: Boolean, signature: Boolean) {
+        this.isHeaderValid = header
+        this.isNameValid = name
+        this.isFatherNameValid = fatherName
+        this.isIssueDateValid = issueDate
+        this.isSignatureValid = signature
+        this.isAllAligned = header && issueDate && signature
+        this.anyFieldValid = header || issueDate|| signature
+
         postInvalidate()
     }
 }
