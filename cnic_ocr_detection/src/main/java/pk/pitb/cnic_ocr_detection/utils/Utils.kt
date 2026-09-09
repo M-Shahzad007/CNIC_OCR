@@ -1,6 +1,5 @@
 package pk.pitb.cnic_ocr_detection.utils
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -13,23 +12,6 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.googlecode.leptonica.android.AdaptiveMap
-import com.googlecode.leptonica.android.Binarize
-import com.googlecode.leptonica.android.Convert
-import com.googlecode.leptonica.android.Enhance
-import com.googlecode.leptonica.android.Pix
-import com.googlecode.leptonica.android.ReadFile
-import com.googlecode.leptonica.android.Rotate
-import com.googlecode.leptonica.android.Skew
-import com.googlecode.leptonica.android.WriteFile
-import org.json.JSONObject
-import java.io.File
-import java.io.FileOutputStream
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.regex.Pattern
 import kotlin.math.atan2
 
 class Utils {

@@ -47,7 +47,7 @@ android {
     }
     packaging {
         jniLibs {
-            useLegacyPackaging = true // Store .so files uncompressed in APK
+            useLegacyPackaging = false
         }
     }
     buildFeatures{

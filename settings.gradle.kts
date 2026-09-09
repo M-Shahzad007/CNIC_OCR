@@ -26,3 +26,5 @@ dependencyResolutionManagement {
 rootProject.name = "Cnic_OCR"
 include(":app")
 include(":cnic_ocr_detection")
+include(":opencv")
+project(":opencv").projectDir = File("sdk")

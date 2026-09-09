@@ -33,8 +33,7 @@ android {
 }
 
 dependencies {
-
-    implementation(files("libs/opencv-release.aar"))
+    implementation(project(":opencv"))
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
@@ -55,8 +54,6 @@ dependencies {
 
     implementation(libs.mlkit.text.recognition)
     implementation(libs.guava)
-    implementation(libs.tesseract4android.openmp)
-
 
     implementation("androidx.exifinterface:exifinterface:1.3.7")
     implementation("org.tensorflow:tensorflow-lite:2.17.0")
