@@ -19,3 +19,37 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# =========================================================================
+# ML Kit & Google Play Services Vision Rules
+# =========================================================================
+-keep class com.google.mlkit.** { *; }
+-keep interface com.google.mlkit.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_text** { *; }
+-keep class com.google.android.gms.vision.** { *; }
+-dontwarn com.google.mlkit.**
+-dontwarn com.google.android.gms.**
+
+# Preserve ML Kit Document Scanner
+-keep class com.google.android.gms.internal.mlkit_vision_document_scanner.** { *; }
+
+# =========================================================================
+# TensorFlow Lite & JNI Models (For UTRNetRecognizer)
+# =========================================================================
+-keep class org.tensorflow.lite.** { *; }
+-keep interface org.tensorflow.lite.** { *; }
+-dontwarn org.tensorflow.lite.**
+
+# Preserve custom Cnic / OCR model classes and JNI entry points
+-keep class pk.pitb.cnic_ocr_detection.** { *; }
+-keepclassmembers class pk.pitb.cnic_ocr_detection.** { *; }
+
+# =========================================================================
+# OpenCV Native Wrappers (If using OpenCV JNI)
+# =========================================================================
+-keep class org.opencv.** { *; }
+-dontwarn org.opencv.**
+
+# Preserve CanHub Cropper & CameraX
+-keep class com.canhub.cropper.** { *; }
+-keep class androidx.camera.** { *; }

@@ -6,13 +6,12 @@
     <application>
         <activity
             android:name=".views.IdCardOcrPreviewActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
             android:exported="false"
-            android:screenOrientation="sensorLandscape"
-            android:configChanges="orientation|screenSize|keyboardHidden" />
+            android:screenOrientation="sensorPortrait" />
         <activity
-            android:name=".views.OcrActivity"
-            android:configChanges="orientation|screenSize"
-            android:exported="false" />
+            android:name="com.canhub.cropper.CropImageActivity"
+            android:theme="@style/Base.Theme.AppCompat" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

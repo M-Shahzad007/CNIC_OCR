@@ -1,0 +1,4 @@
+ keyAlias 'key0'
+            keyPassword 'Thanks@123'
+            storeFile file('doc/ocrkeystore.jks')
+            storePassword 'Thanks@123'

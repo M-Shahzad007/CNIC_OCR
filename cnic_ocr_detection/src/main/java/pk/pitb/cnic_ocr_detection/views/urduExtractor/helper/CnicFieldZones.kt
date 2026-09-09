@@ -14,7 +14,7 @@ object CnicFieldZones {
     val FOOTER_1         = RectF(0.25f, 0.58f, 0.68f, 0.74f)
     val FOOTER_2         = RectF(0.25f, 0.74f, 0.68f, 0.86f)
    // val FOOTER_3         = RectF(0.25f, 0.86f, 0.68f, 1.00f)
-    val FOOTER_3         = RectF(0.25f, 0.85f, 0.68f, 1.00f)
+    val FOOTER_3         = RectF(0.25f, 0.83f, 0.68f, 1.00f)
     val SIGNATURE_TEXT   = RectF(0.68f, 0.90f, 0.96f, 1.0f)
    // val SIGNATURE_TEXT   = RectF(0.68f, 0.90f, 0.96f, 0.98f)
 }

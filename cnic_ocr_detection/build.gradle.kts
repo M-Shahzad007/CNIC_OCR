@@ -34,6 +34,7 @@ android {
 
 dependencies {
 
+    implementation(files("libs/opencv-release.aar"))
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
@@ -60,5 +61,9 @@ dependencies {
     implementation("androidx.exifinterface:exifinterface:1.3.7")
     implementation("org.tensorflow:tensorflow-lite:2.17.0")
     implementation("org.tensorflow:tensorflow-lite-metadata:0.5.0")
-   // implementation("org.tensorflow:tensorflow-lite-support:0.5.0")
+   // implementation("org.tensorflow:tensorflow-lite-support:0.5.0")\
+
+    implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
+
+    implementation("com.vanniktech:android-image-cropper:4.7.0")
 }

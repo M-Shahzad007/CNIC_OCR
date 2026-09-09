@@ -15,14 +15,39 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        create("release") {
+            storeFile = file("doc/ocrkeystore.jks")
+            storePassword = "Thanks@123"
+            keyAlias = "key0"
+            keyPassword = "Thanks@123"
+        }
+    }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled =  true
+            isShrinkResources  = false
+            isDebuggable  = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            isMinifyEnabled  = false
+            isShrinkResources =  false
+            isDebuggable  = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true // Store .so files uncompressed in APK
         }
     }
     buildFeatures{

@@ -1,180 +1,79 @@
-/*
-package pk.pitb.cnic_ocr_detection.views.urduExtractor
-
-import android.content.Context
-import android.graphics.*
-import android.util.AttributeSet
-import android.view.View
-import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CardGeometry
-import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CnicFieldZones
-
-class CnicCameraOverlay @JvmOverloads constructor(
-    context: Context, attrs: AttributeSet? = null
-) : View(context, attrs) {
-
-    val cardBounds = RectF()
-
-    // Key spatial zones defined relative to the main card container
-    val headerBounds = RectF()
-    val nameLabelBounds = RectF()
-    val fatherNameLabelBounds = RectF()
-
-    val footerBlock1Bounds = RectF()
-    val footerBlock2Bounds = RectF()
-    val footerBlock3Bounds = RectF()
-    val signatureBounds = RectF()
-    val signatureTextBounds = RectF()
-
-    // Direct Extraction Regions (derived from cardBounds)
-    val urduNameBounds = RectF()
-    val urduFatherNameBounds = RectF()
-
-    private var isAligned = false
-    var isHeaderValid = false
-    var isNameValid = false
-    var isFatherNameValid = false
-    var isSignatureValid = false
-
-    private val backgroundPaint = Paint().apply {
-        color = Color.parseColor("#99000000") // Dim background
-    }
-    private val clearPaint = Paint().apply {
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
-    }
-    private val borderPaint = Paint().apply {
-        style = Paint.Style.STROKE
-        strokeWidth = 8f
-        color = Color.WHITE
-        isAntiAlias = true
-    }
-    private val guideZonePaint = Paint().apply {
-        style = Paint.Style.STROKE
-        strokeWidth = 3f
-        color = Color.parseColor("#80FFFFFF") // Semi-transparent guide outline
-        pathEffect = DashPathEffect(floatArrayOf(12f, 8f), 0f)
-        isAntiAlias = true
-    }
-    private val labelPaint = Paint().apply {
-        // color = Color.parseColor("#B0FFFFFF")
-        color = Color.CYAN
-        textSize = 28f
-        isAntiAlias = true
-    }
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-
-        cardBounds.set(CardGeometry.computeCardBounds(w.toFloat(), h.toFloat()))
-        headerBounds.set(CardGeometry.toCardSpace(CnicFieldZones.HEADER, cardBounds))
-        nameLabelBounds.set(CardGeometry.toCardSpace(CnicFieldZones.NAME_LABEL, cardBounds))
-        urduNameBounds.set(CardGeometry.toCardSpace(CnicFieldZones.NAME_URDU, cardBounds))
-        fatherNameLabelBounds.set(CardGeometry.toCardSpace(CnicFieldZones.FATHER_LABEL, cardBounds))
-        urduFatherNameBounds.set(CardGeometry.toCardSpace(CnicFieldZones.FATHER_URDU, cardBounds))
-        footerBlock1Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_1, cardBounds))
-        footerBlock2Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_2, cardBounds))
-        footerBlock3Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_3, cardBounds))
-        signatureTextBounds.set(CardGeometry.toCardSpace(CnicFieldZones.SIGNATURE_TEXT, cardBounds))
-    }
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
-
-        // 1. Darken background outside CNIC Box
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
-
-        // 2. Cut out clear rectangular window for CNIC
-        canvas.drawRoundRect(cardBounds, 16f, 16f, clearPaint)
-
-        // 3. Draw Main Border (Turns Green when aligned)
-        borderPaint.color = if (isAligned) Color.GREEN else Color.WHITE
-        canvas.drawRoundRect(cardBounds, 16f, 16f, borderPaint)
-
-        // 4. Draw Helper Field Boxes & Placeholders
-        // Helper lambda to draw individual zones with their dynamic color
-        fun drawGuideZone(bounds: RectF, isValid: Boolean, label: String) {
-            guideZonePaint.color = if (isValid) Color.GREEN else Color.RED
-            canvas.drawRect(bounds, guideZonePaint)
-            canvas.drawText(label, bounds.left + 8f, bounds.top + 24f, labelPaint)
-        }
-
-        // 4. Draw Individual Field Regions with independent validation colors
-        //  drawGuideZone(headerBounds, isHeaderValid, "HEADER")
-        drawGuideZone(nameLabelBounds, isNameValid, "NAME")
-        drawGuideZone(fatherNameLabelBounds, isFatherNameValid, "FATHER NAME")
-        drawGuideZone(signatureTextBounds, isSignatureValid, "SIGNATURE")
-
-        // Passive guide regions (or link them to their respective parents if needed)
-//        drawGuideZone(urduNameBounds, isNameValid, "NAME URDU")
-//        drawGuideZone(urduFatherNameBounds, isFatherNameValid, "FATHER NAME URDU")
-
-    }
-
-    fun toCardSpace(zone: RectF, cLeft: Float, cTop: Float, cw: Float, ch: Float) =
-        RectF(
-            cLeft + cw * zone.left,
-            cTop + ch * zone.top,
-            cLeft + cw * zone.right,
-            cTop + ch * zone.bottom
-        )
-
-    fun setAlignmentStatus(aligned: Boolean) {
-        if (isAligned != aligned) {
-            isAligned = aligned
-            postInvalidate()
-        }
-    }
-    fun setFieldStatuses(header: Boolean, name: Boolean, fatherName: Boolean, signature: Boolean) {
-        this.isHeaderValid = header
-        this.isNameValid = name
-        this.isFatherNameValid = fatherName
-        this.isSignatureValid = signature
-        //  this.isAligned = header && name && fatherName && signature
-        this.isAligned = name && fatherName && signature
-        postInvalidate()
-    }
-}*/
-
-
 package pk.pitb.cnic_ocr_detection.views.urduExtractor
 
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
 import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CardGeometry
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CnicCardNormalizer
 import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CnicFieldZones
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.CnicAnalyzer.CnicGuidance
 
 class CnicCameraOverlay @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
+    enum class CaptureMode { AUTO, MANUAL }
+
+    var captureMode: CaptureMode = CaptureMode.AUTO
+
+    var onModeChangedListener: ((CaptureMode) -> Unit)? = null
+    var onManualCaptureClickListener: (() -> Unit)? = null
+
+    // Mode Toggle Button Geometry
+    private val toggleRect = RectF()
+    private val captureBtnRect = RectF()
+
+    private val toggleBgPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.parseColor("#99000000")
+    }
+
+    private val toggleActiveBgPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.parseColor("#00E5A0")
+    }
+
+    private val toggleTextPaint = Paint().apply {
+        isAntiAlias = true
+        textSize = 28f
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    }
+
+    private val manualCaptureBtnPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.parseColor("#00E5A0")
+        style = Paint.Style.FILL
+    }
+
+
+
     val cardBounds = RectF()
 
-    val headerBounds = RectF()
-    val nameLabelBounds = RectF()
-    val fatherNameLabelBounds = RectF()
-
-    val footerBlock1Bounds = RectF()
-    val footerBlock2Bounds = RectF()
-    val footerBlock3Bounds = RectF()
-    val signatureBounds = RectF()
-    val signatureTextBounds = RectF()
-
-    val urduNameBounds = RectF()
-    val urduFatherNameBounds = RectF()
-
     private var isAllAligned = false
-    private var anyFieldValid = false
-    var isHeaderValid = false
-    var isNameValid = false
-    var isFatherNameValid = false
-    var isIssueDateValid = false
-    var isSignatureValid = false
+    var stopProcessing = false
+    var isManualCaptureClicked = false
+    private var guidance: CnicGuidance = CnicGuidance.SEARCHING   // NEW
+
+    private var detectedCorners: List<PointF>? = null
+
+    private val detectedEdgePaint = Paint().apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 6f
+        color = Color.parseColor("#00E5A0") // Accent green highlight
+        isAntiAlias = true
+     //   pathEffect = DashPathEffect(floatArrayOf(20f, 10f), 0f) // Animated/Dashed outline
+    }
+
 
     // ---------- Palette ----------
     private val colorAccent = Color.parseColor("#00E5A0")      // success / aligned green-teal
-    private val colorWarn = Color.parseColor("#FF5A5A")        // pending — bright coral-red, high contrast
+    private val colorWarn =
+        Color.parseColor("#FF5A5A")        // pending — bright coral-red, high contrast
     private val colorIdle = Color.parseColor("#FFFFFF")        // idle white
     private val colorScrim = Color.parseColor("#B0000000")
 
@@ -202,21 +101,6 @@ class CnicCameraOverlay @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
 
-    private val badgeBgPaint = Paint().apply { isAntiAlias = true }
-    private val badgeIconPaint = Paint().apply {
-        isAntiAlias = true
-        style = Paint.Style.STROKE
-        strokeWidth = 4f
-        strokeCap = Paint.Cap.ROUND
-        color = Color.parseColor("#101418")
-    }
-    private val zoneHairlinePaint = Paint().apply {
-        style = Paint.Style.STROKE
-        strokeWidth = 4f
-        isAntiAlias = true
-      //  pathEffect = DashPathEffect(floatArrayOf(10f, 6f), 0f)
-    }
-
     private val statusPillBgPaint = Paint().apply {
         isAntiAlias = true
         color = Color.parseColor("#CC101418")
@@ -235,6 +119,15 @@ class CnicCameraOverlay @JvmOverloads constructor(
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
     }
 
+    private val shineGlowPaint = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.FILL
+        maskFilter = BlurMaskFilter(18f, BlurMaskFilter.Blur.NORMAL)
+    }
+    private val shineCorePaint = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.FILL
+    }
     private val cornerLen = 56f
     private val cornerRadius = 20f
 
@@ -245,12 +138,17 @@ class CnicCameraOverlay @JvmOverloads constructor(
     private val scanAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
         duration = 1800
         repeatCount = ValueAnimator.INFINITE
-    //    repeatMode = ValueAnimator.RESTART
+        //    repeatMode = ValueAnimator.RESTART
         repeatMode = ValueAnimator.REVERSE
         interpolator = LinearInterpolator()
+//        addUpdateListener {
+//            scanProgress = it.animatedValue as Float
+//            if (!anyFieldValid) postInvalidateOnAnimation()
+//        }
+
         addUpdateListener {
             scanProgress = it.animatedValue as Float
-            if (!anyFieldValid) postInvalidateOnAnimation()
+            if (isAllAligned) postInvalidateOnAnimation()
         }
     }
 
@@ -260,7 +158,7 @@ class CnicCameraOverlay @JvmOverloads constructor(
         repeatMode = ValueAnimator.REVERSE
         addUpdateListener {
             pulse = it.animatedValue as Float
-            if (anyFieldValid) postInvalidateOnAnimation()
+            /* if (anyFieldValid) */postInvalidateOnAnimation()
         }
     }
 
@@ -279,16 +177,6 @@ class CnicCameraOverlay @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         cardBounds.set(CardGeometry.computeCardBounds(w.toFloat(), h.toFloat()))
-
-        headerBounds.set(CardGeometry.toCardSpace(CnicFieldZones.HEADER, cardBounds))
-        nameLabelBounds.set(CardGeometry.toCardSpace(CnicFieldZones.NAME_LABEL, cardBounds))
-        urduNameBounds.set(CardGeometry.toCardSpace(CnicFieldZones.NAME_URDU, cardBounds))
-        fatherNameLabelBounds.set(CardGeometry.toCardSpace(CnicFieldZones.FATHER_LABEL, cardBounds))
-        urduFatherNameBounds.set(CardGeometry.toCardSpace(CnicFieldZones.FATHER_URDU, cardBounds))
-        footerBlock1Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_1, cardBounds))
-        footerBlock2Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_2, cardBounds))
-        footerBlock3Bounds.set(CardGeometry.toCardSpace(CnicFieldZones.FOOTER_3, cardBounds))
-        signatureTextBounds.set(CardGeometry.toCardSpace(CnicFieldZones.SIGNATURE_TEXT, cardBounds))
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -313,19 +201,35 @@ class CnicCameraOverlay @JvmOverloads constructor(
         drawCorners(canvas, cardBounds, cornerPaint)
 
         // 4. Scan line sweep while searching for alignment
-        if (!anyFieldValid) {
-            drawScanLine(canvas, cardBounds)
+//        if (!anyFieldValid) {
+//            drawScanLine(canvas, cardBounds)
+//        }
+        if (captureMode == CaptureMode.AUTO){
+            if (isAllAligned && !stopProcessing) {
+                drawShineSweep(canvas, cardBounds)
+            } else if (!isAllAligned) {
+                drawScanLine(canvas, cardBounds)
+            }
+        }else{
+            if (isManualCaptureClicked && !stopProcessing) {
+                drawShineSweep(canvas, cardBounds)
+            } else if (!isManualCaptureClicked && !stopProcessing) {
+                drawScanLine(canvas, cardBounds)
+            }
         }
-
-        // 5. Field zones as subtle dashed hairlines + small corner badges (not solid boxes)
-        drawFieldZone(canvas, headerBounds, isHeaderValid, "Header")
-//        drawFieldZone(canvas, nameLabelBounds, isNameValid, "Name")
-//        drawFieldZone(canvas, fatherNameLabelBounds, isFatherNameValid, "Father's Name")
-        drawFieldZone(canvas, signatureTextBounds, isSignatureValid, "Signature")
-        drawFieldZone(canvas, footerBlock3Bounds, isIssueDateValid, "Issue date")
-
         // 6. Status pill under the card
         drawStatusPill(canvas)
+        // Draw detected OpenCV edges if available
+        drawDetectedEdges(canvas)
+
+        // Draw top Mode Switcher
+        drawModeToggle(canvas)
+
+        // Draw Manual Capture Button if in MANUAL mode
+        if (captureMode == CaptureMode.MANUAL) {
+            drawManualCaptureButton(canvas)
+        }
+
     }
 
     private fun drawCorners(canvas: Canvas, r: RectF, paint: Paint) {
@@ -368,70 +272,68 @@ class CnicCameraOverlay @JvmOverloads constructor(
             Shader.TileMode.CLAMP
         )
         scanLinePaint.shader = shader
-       // canvas.drawRect(r.left, y - 1.5f, r.right, y + 1.5f, scanLinePaint)
+        // canvas.drawRect(r.left, y - 1.5f, r.right, y + 1.5f, scanLinePaint)
         canvas.drawRect(r.left, y - 4f, r.right, y + 4f, scanLinePaint)
     }
 
-    private val zoneLabelBgPaint = Paint().apply {
-        isAntiAlias = true
-        color = Color.parseColor("#B3101418")   // semi-dark, ~70% opacity
-    }
+    private fun drawDetectedEdges(canvas: Canvas) {
+        val corners = detectedCorners ?: return
+        if (corners.size != 4) return
 
-    private fun drawFieldZone(canvas: Canvas, bounds: RectF, valid: Boolean, label: String) {
-        val color = if (valid) colorAccent else colorWarn
-        // Solid, fully-opaque outline — no low-contrast alpha blending
-        zoneHairlinePaint.color = color
-        canvas.drawRoundRect(bounds, 8f, 8f, zoneHairlinePaint)
+        val path = Path().apply {
+            val tlX = cardBounds.left + (corners[0].x * cardBounds.width())
+            val tlY = cardBounds.top + (corners[0].y * cardBounds.height())
 
-        // ---- Header row: badge + label side-by-side, sitting just above the box ----
-        val badgeR = 17f                       // bigger badge
-        val rowGap = 10f                       // gap between row and box
-        val rowCenterY = bounds.top - rowGap - badgeR
-        val cx = bounds.left + badgeR
+            val trX = cardBounds.left + (corners[1].x * cardBounds.width())
+            val trY = cardBounds.top + (corners[1].y * cardBounds.height())
 
-        // Background pill behind the badge + label so text stays legible over any
-        // camera content (skin, paper, patterned backgrounds, etc.)
-        val textWidth = labelPaint.measureText(label)
-        val pillPadH = 10f
-        val pillPadV = 8f
-        val pillLeft = cx - badgeR - pillPadH
-        val pillRight = cx + badgeR + 10f + textWidth + pillPadH
-        val pillTop = rowCenterY - badgeR - pillPadV
-        val pillBottom = rowCenterY + badgeR + pillPadV
-        canvas.drawRoundRect(
-            RectF(pillLeft, pillTop, pillRight, pillBottom),
-            (pillBottom - pillTop) / 2, (pillBottom - pillTop) / 2,
-            zoneLabelBgPaint
-        )
+            val brX = cardBounds.left + (corners[2].x * cardBounds.width())
+            val brY = cardBounds.top + (corners[2].y * cardBounds.height())
 
-        // Badge circle
-        badgeBgPaint.color = color
-        canvas.drawCircle(cx, rowCenterY, badgeR, badgeBgPaint)
-        if (valid) {
-            val path = Path().apply {
-                moveTo(cx - 7f, rowCenterY)
-                lineTo(cx - 2f, rowCenterY + 5.5f)
-                lineTo(cx + 7f, rowCenterY - 5.5f)
-            }
-            canvas.drawPath(path, badgeIconPaint)
-        } else {
-            badgeIconPaint.style = Paint.Style.FILL
-            canvas.drawCircle(cx, rowCenterY, 3.5f, badgeIconPaint)
-            badgeIconPaint.style = Paint.Style.STROKE
+            val blX = cardBounds.left + (corners[3].x * cardBounds.width())
+            val blY = cardBounds.top + (corners[3].y * cardBounds.height())
+
+            moveTo(tlX, tlY)
+            lineTo(trX, trY)
+            lineTo(brX, brY)
+            lineTo(blX, blY)
+            close()
         }
 
-        // Label, vertically centered against the badge, right next to it
-        val textY = rowCenterY - (labelPaint.descent() + labelPaint.ascent()) / 2
-        canvas.drawText(label, cx + badgeR + 10f, textY, labelPaint)
+        canvas.drawPath(path, detectedEdgePaint)
+    }
+
+    private fun drawShineSweep(canvas: Canvas, r: RectF) {
+        val x = r.left + r.width() * scanProgress
+
+        // Soft glow, wide and blurred
+        val glowShader = LinearGradient(
+            x, r.top, x, r.bottom,
+            intArrayOf(Color.TRANSPARENT, Color.WHITE, Color.TRANSPARENT),
+            floatArrayOf(0f, 0.5f, 1f),
+            Shader.TileMode.CLAMP
+        )
+        shineGlowPaint.shader = null
+        shineGlowPaint.color = Color.WHITE
+        canvas.drawRect(x - 10f, r.top, x + 10f, r.bottom, shineGlowPaint)
+
+        // Bright, bold, fully-opaque core line on top of the glow
+        canvas.drawRect(
+            x - 2.5f,
+            r.top,
+            x + 2.5f,
+            r.bottom,
+            shineCorePaint.apply { color = Color.WHITE })
     }
 
     private fun drawStatusPill(canvas: Canvas) {
-        val fieldsOk = listOf(isNameValid, isFatherNameValid, isSignatureValid)
-        val doneCount = fieldsOk.count { it }
-        val message = when {
-            isAllAligned -> "Perfect — hold still"
-            doneCount == 0 -> "Position your CNIC inside the frame"
-            else -> "Adjusting… $doneCount/${fieldsOk.size} fields detected"
+        val message = when (guidance) {
+            CnicGuidance.SEARCHING -> "Position your CNIC inside the frame "
+            CnicGuidance.TILTED_LEFT -> "Tilted — rotate card left ↺ "
+            CnicGuidance.TILTED_RIGHT -> "Tilted — rotate card right ↻ "
+            CnicGuidance.MOVE_CLOSER -> "Move closer & hold steady"
+            CnicGuidance.HOLD_STILL -> if (captureMode== CaptureMode.AUTO)  "Perfect — hold still" else "Take Picture"
+            CnicAnalyzer.CnicGuidance.CAPTURED -> "Captured! "
         }
 
         val padH = 28f
@@ -440,32 +342,184 @@ class CnicCameraOverlay @JvmOverloads constructor(
         val pillLeft = cardBounds.centerX() - textWidth / 2 - padH
         val pillRight = cardBounds.centerX() + textWidth / 2 + padH
         val pillTop = cardBounds.bottom + 28f
-        val pillBottom = pillTop + statusTextPaint.textSize + padV * 2 - statusTextPaint.textSize / 2
+        val pillBottom =
+            pillTop + statusTextPaint.textSize + padV * 2 - statusTextPaint.textSize / 2
 
         val pillRect = RectF(pillLeft, pillTop, pillRight, pillBottom)
-        canvas.drawRoundRect(pillRect, pillRect.height() / 2, pillRect.height() / 2, statusPillBgPaint)
+        canvas.drawRoundRect(
+            pillRect,
+            pillRect.height() / 2,
+            pillRect.height() / 2,
+            statusPillBgPaint
+        )
 
-        statusTextPaint.color = if (isAllAligned) colorAccent else Color.WHITE
+        statusTextPaint.color = when (guidance) {
+            CnicGuidance.HOLD_STILL, CnicGuidance.CAPTURED -> colorAccent
+            CnicGuidance.TILTED_LEFT, CnicGuidance.TILTED_RIGHT -> colorWarn
+            else -> Color.WHITE
+        }
         val textY = pillRect.centerY() - (statusTextPaint.descent() + statusTextPaint.ascent()) / 2
         canvas.drawText(message, cardBounds.centerX(), textY, statusTextPaint)
     }
 
-    fun setAlignmentStatus(aligned: Boolean) {
-        if (isAllAligned != aligned) {
-            isAllAligned = aligned
-            postInvalidate()
+    private fun drawModeToggle(canvas: Canvas) {
+        val toggleWidth = 320f
+        val toggleHeight = 80f
+        val topMargin = 60f
+
+        toggleRect.set(
+            (width - toggleWidth) / 2f,
+            topMargin,
+            (width + toggleWidth) / 2f,
+            topMargin + toggleHeight
+        )
+
+        // Outer background pill
+        canvas.drawRoundRect(toggleRect, toggleHeight / 2, toggleHeight / 2, toggleBgPaint)
+
+        val halfWidth = toggleWidth / 2f
+        val activeRect = if (captureMode == CaptureMode.AUTO) {
+            RectF(toggleRect.left + 4f, toggleRect.top + 4f, toggleRect.left + halfWidth - 2f, toggleRect.bottom - 4f)
+        } else {
+            RectF(toggleRect.left + halfWidth + 2f, toggleRect.top + 4f, toggleRect.right - 4f, toggleRect.bottom - 4f)
         }
+
+        // Active tab background indicator
+        canvas.drawRoundRect(activeRect, (toggleHeight - 8f) / 2, (toggleHeight - 8f) / 2, toggleActiveBgPaint)
+
+        // Draw Text "Auto"
+        toggleTextPaint.color = if (captureMode == CaptureMode.AUTO) Color.BLACK else Color.WHITE
+        val textY = toggleRect.centerY() - (toggleTextPaint.descent() + toggleTextPaint.ascent()) / 2
+        canvas.drawText("Auto", toggleRect.left + halfWidth / 2, textY, toggleTextPaint)
+
+        // Draw Text "Manual"
+        toggleTextPaint.color = if (captureMode == CaptureMode.MANUAL) Color.BLACK else Color.WHITE
+        canvas.drawText("Manual", toggleRect.right - halfWidth / 2, textY, toggleTextPaint)
     }
 
-    fun setFieldStatuses(header: Boolean, name: Boolean, fatherName: Boolean, issueDate: Boolean, signature: Boolean) {
-        this.isHeaderValid = header
-        this.isNameValid = name
-        this.isFatherNameValid = fatherName
-        this.isIssueDateValid = issueDate
-        this.isSignatureValid = signature
-        this.isAllAligned = header && issueDate && signature
-        this.anyFieldValid = header || issueDate|| signature
+    private fun drawManualCaptureButton(canvas: Canvas) {
+        val btnRadius = 75f
 
+        // Calculate horizontal space between right edge of card bounding box and right edge of screen
+        val availableWidth = width - cardBounds.right
+
+        // If there's enough room on the right, position it horizontally centered in that margin.
+        // Fallback to absolute placement if card bounds are near screen edge.
+       // val btnCenterX =if (availableWidth > btnRadius * 2 + 16f) {
+        val btnCenterX =if (availableWidth > btnRadius + 16f) {
+            cardBounds.right + (availableWidth / 2f)
+        } else {
+            width - btnRadius - 24f
+        }
+
+        val btnCenterY = cardBounds.centerY()
+
+        captureBtnRect.set(
+            btnCenterX - btnRadius,
+            btnCenterY - btnRadius,
+            btnCenterX + btnRadius,
+            btnCenterY + btnRadius
+        )
+
+        // Outer glow/shadow for high visibility against live camera background
+        val outerRingPaint = Paint().apply {
+            isAntiAlias = true
+            color = Color.parseColor("#40000000")
+            style = Paint.Style.FILL
+        }
+        canvas.drawCircle(btnCenterX, btnCenterY, btnRadius + 6f, outerRingPaint)
+
+        // Main shutter background
+        canvas.drawCircle(btnCenterX, btnCenterY, btnRadius, manualCaptureBtnPaint)
+
+        // White inner ring accent
+        val innerCirclePaint = Paint().apply {
+            isAntiAlias = true
+            color = Color.WHITE
+            style = Paint.Style.STROKE
+            strokeWidth = 5f
+        }
+        canvas.drawCircle(btnCenterX, btnCenterY, btnRadius - 10f, innerCirclePaint)
+
+        // Solid center core
+        val centerDotPaint = Paint().apply {
+            isAntiAlias = true
+            color = Color.WHITE
+            style = Paint.Style.FILL
+        }
+        canvas.drawCircle(btnCenterX, btnCenterY, btnRadius - 22f, centerDotPaint)
+    }
+
+    override fun onTouchEvent(event: android.view.MotionEvent): Boolean {
+        if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+            // Check click on mode switcher toggle
+            if (toggleRect.contains(event.x, event.y)) {
+                captureMode = if (captureMode == CaptureMode.AUTO) CaptureMode.MANUAL else CaptureMode.AUTO
+                onModeChangedListener?.invoke(captureMode)
+                postInvalidate()
+                return true
+            }
+
+            // Expand hit area slightly (padding of 20px) for easier tapping
+            val touchPadding = 20f
+            val expandedCaptureRect = RectF(
+                captureBtnRect.left - touchPadding,
+                captureBtnRect.top - touchPadding,
+                captureBtnRect.right + touchPadding,
+                captureBtnRect.bottom + touchPadding
+            )
+
+            // Check click on right-side manual capture button
+            if (captureMode == CaptureMode.MANUAL && expandedCaptureRect.contains(event.x, event.y)) {
+                isManualCaptureClicked = true
+                onManualCaptureClickListener?.invoke()
+                return true
+            }
+        }
+        return super.onTouchEvent(event)
+    }
+
+    fun isManualMode(): Boolean = captureMode == CaptureMode.MANUAL
+    fun stopOverlayRendering(stop: Boolean) {
+        stopProcessing = stop
+    }
+    // Function to set corners from Analyzer
+    fun updateDetectedCorners(corners: List<PointF>?) {
+        this.detectedCorners = corners
+        Log.d("openCVEdges","${corners}")
+        postInvalidate()
+    }
+
+    fun setFieldStatuses(
+        isAllAligned: Boolean, stopProcessing: Boolean,
+        guidance: CnicGuidance = if (isAllAligned) CnicGuidance.HOLD_STILL else CnicGuidance.SEARCHING
+    ) {
+        this.isAllAligned = isAllAligned
+        this.stopProcessing = stopProcessing
+        this.guidance = guidance
+        postInvalidate()
+    }
+
+
+    /**
+     * Resets all validation flags, animation states, and debug information
+     * back to their initial default states for a new capture session/retake.
+     */
+    fun resetOverlay() {
+        isAllAligned = false
+        isManualCaptureClicked = false
+        stopProcessing = false
+        guidance = CnicGuidance.SEARCHING
+        detectedCorners = null
+        // Reset scan animation loop
+        scanProgress = 0f
+        pulse = 0f
+
+        // Ensure animators are running if they were stopped/paused
+        if (!scanAnimator.isRunning) scanAnimator.start()
+        if (!pulseAnimator.isRunning) pulseAnimator.start()
+
+        // Request redrawing of the view back to the initial state
         postInvalidate()
     }
 }

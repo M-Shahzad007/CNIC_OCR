@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.util.Log
+import org.opencv.android.OpenCVLoader
 import pk.pitb.cnic_ocr_detection.callbacks.OcrDetectionCallback
 import pk.pitb.cnic_ocr_detection.utils.hasPermission
 import pk.pitb.cnic_ocr_detection.utils.showPermissionDialog
@@ -20,6 +21,12 @@ class OCRManager private constructor() {
 
         fun getInstance(ocrDetectionResult: OcrDetectionCallback): OCRManager {
             this.ocrDetectionResult = ocrDetectionResult
+
+            if (!OpenCVLoader.initLocal()) {
+                Log.e("OpenCV", "OpenCV initialization failed.");
+            } else {
+                Log.d("OpenCV", "OpenCV initialization succeeded.");
+            }
 
             return INSTANCE ?: synchronized(this) {
                 val instance = OCRManager()

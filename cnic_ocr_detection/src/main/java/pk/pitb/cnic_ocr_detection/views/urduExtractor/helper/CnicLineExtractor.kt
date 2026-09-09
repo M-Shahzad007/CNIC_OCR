@@ -38,6 +38,7 @@ data class CardOcrResult(
 class CnicLineExtractor(
     private val urduRecognizer: UTRNetRecognizer
 ) {
+  //  private val mlKitRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     private val mlKitRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     private val bgExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -51,10 +52,11 @@ class CnicLineExtractor(
      * off the main thread. [onResult] / [onFailure] are always invoked on the main thread.
      */
     fun extract(
-        cardBmp: Bitmap,
+        cardBmp: Bitmap?,
         onResult: (CardOcrResult) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        if (cardBmp==null) return
         mlKitRecognizer.process(InputImage.fromBitmap(cardBmp, 0))
             .addOnSuccessListener { visionText ->
                 // UTRNet inference is heavy — move off the ML Kit callback (main) thread.

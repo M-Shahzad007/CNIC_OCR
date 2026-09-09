@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#121212"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- Interactive Corner Drag Editor View -->
+    <pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.custom_croper.CnicCornerEditorView
+        android:id="@+id/dialogCornerEditorView"
+        android:layout_width="match_parent"
+        android:layout_height="360dp" />
+
+    <!-- Control Tools -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingTop="8dp">
+
+        <Button
+            android:id="@+id/btnDialogRotate"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:text="Rotate 90°"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnDialogFlipH"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:text="Flip H"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnDialogFlipV"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Flip V"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+</LinearLayout>
