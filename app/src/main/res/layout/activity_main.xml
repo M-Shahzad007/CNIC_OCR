@@ -158,7 +158,7 @@
                 <!-- Editable rows injected here at runtime -->
 
             </LinearLayout>
-            <com.example.cnic_ocr.UrduVirtualKeyboardView
+            <pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.urdu_keyboard.UrduVirtualKeyboardView
                 android:id="@+id/urduVirtualKeyboard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

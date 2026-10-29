@@ -3,7 +3,7 @@ package pk.pitb.cnic_ocr_detection.views.urduExtractor.helper
 import android.graphics.RectF
 
 /**
- * SINGLE SOURCE OF TRUTH for where the card box sits inside ANY rectangle
+ * The card box sits inside ANY rectangle
  * (a screen View or a Bitmap). Both the on-screen overlay and the analyzer
  * MUST call this same function — never re-derive the box independently.
  */

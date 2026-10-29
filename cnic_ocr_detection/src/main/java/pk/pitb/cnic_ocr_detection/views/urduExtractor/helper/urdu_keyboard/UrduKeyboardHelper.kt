@@ -1,9 +1,10 @@
-package com.example.cnic_ocr
+package pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.urdu_keyboard
 
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 
@@ -17,19 +18,19 @@ object UrduKeyboardHelper {
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         val enabledMethods = imm.enabledInputMethodList
 
-        android.util.Log.d("UrduKbCheck", "Enabled IMEs: ${enabledMethods.map { it.packageName }}")
+        Log.d("UrduKbCheck", "Enabled IMEs: ${enabledMethods.map { it.packageName }}")
 
         for (imi in enabledMethods) {
             val enabledSubtypes = imm.getEnabledInputMethodSubtypeList(imi, true)
-            android.util.Log.d("UrduKbCheck", "${imi.packageName} enabled locales: ${enabledSubtypes.map { it.locale }}")
+            Log.d("UrduKbCheck", "${imi.packageName} enabled locales: ${enabledSubtypes.map { it.locale }}")
             for (subtype in enabledSubtypes) {
                 if (subtype.locale.startsWith("ur")) {
-                    android.util.Log.d("UrduKbCheck", "Urdu FOUND on ${imi.packageName}")
+                    Log.d("UrduKbCheck", "Urdu FOUND on ${imi.packageName}")
                     return true
                 }
             }
         }
-        android.util.Log.d("UrduKbCheck", "No Urdu subtype enabled anywhere")
+        Log.d("UrduKbCheck", "No Urdu subtype enabled anywhere")
         return false
     }
 

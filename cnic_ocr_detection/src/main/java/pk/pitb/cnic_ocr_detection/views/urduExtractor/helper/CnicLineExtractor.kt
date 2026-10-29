@@ -208,7 +208,6 @@ class CnicLineExtractor(
         val right = maxOf(valueLine.rect.right, maxRightBound).coerceAtMost(cardBmp.width)
 
         // 3. Vertical bounds between current value bottom and next anchor top
-        // 3. Vertical bounds between current value bottom and next anchor top
         val top = (valueLine.rect.bottom + padY).coerceAtMost(cardBmp.height - 1)
 
         // Add bottom padding (e.g. 1.5% of height) to push the bottom boundary lower

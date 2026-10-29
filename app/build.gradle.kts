@@ -14,6 +14,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // ADD THIS BLOCK - Filters out emulators (x86 and x86_64), keeping only ARM architectures
+        ndk {
+            abiFilters += setOf("arm64-v8a", "armeabi-v7a")
+        }
     }
     signingConfigs {
         create("release") {

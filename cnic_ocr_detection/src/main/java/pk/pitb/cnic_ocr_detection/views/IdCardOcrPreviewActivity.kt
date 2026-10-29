@@ -34,6 +34,8 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 
 // CanHub Cropper Imports
@@ -169,6 +171,7 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
         stopCamera()
         cameraTemplateOverlay.visibility = View.GONE
         cameraOverlay.visibility = View.GONE
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         val bottomSheetDialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
         val dialogView = layoutInflater.inflate(R.layout.dialog_source_selection, null)
@@ -721,10 +724,31 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
 
         cameraOverlay.stopOverlayRendering(true)
         val dialogView = layoutInflater.inflate(R.layout.dialog_cnic_corner_editor, null)
+        // Create edge-to-edge dark dialog
+        val dialog = android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen).apply {
+            setContentView(dialogView)
+            setCancelable(false)
+            window?.setBackgroundDrawableResource(android.R.color.transparent)
+            // Ensure edge-to-edge content draws cleanly behind system bars
+            window?.let { win ->
+                androidx.core.view.WindowCompat.setDecorFitsSystemWindows(win, false)
+            }
+        }
+        val actionsContainer = dialogView.findViewById<View>(R.id.actionsContainer)
+
+        // Dynamically apply bottom navigation bar padding
+        ViewCompat.setOnApplyWindowInsetsListener(actionsContainer) { v, insets ->
+            val navBarInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            v.updatePadding(bottom = navBarInset.bottom + (20 * resources.displayMetrics.density).toInt())
+            insets
+        }
+
         val editorView = dialogView.findViewById<CnicCornerEditorView>(R.id.dialogCornerEditorView)
         val btnRotate = dialogView.findViewById<Button>(R.id.btnDialogRotate)
         val btnFlipH = dialogView.findViewById<Button>(R.id.btnDialogFlipH)
         val btnFlipV = dialogView.findViewById<Button>(R.id.btnDialogFlipV)
+        val btnProcess = dialogView.findViewById<View>(R.id.btnProcess)
+        val btnRetake = dialogView.findViewById<View>(R.id.btnRetake)
 
         // Load bitmap and detected corners into interactive view
         editorView.setImageAndCorners(cardBmp, detectedCorners)
@@ -732,8 +756,30 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
         btnRotate.setOnClickListener { editorView.rotate90() }
         btnFlipH.setOnClickListener { editorView.flipHorizontal() }
         btnFlipV.setOnClickListener { editorView.flipVertical() }
+        btnProcess.setOnClickListener {
+            dialog.dismiss()
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
-        AlertDialog.Builder(this)
+            val flattenedBitmap = ManualCardTransformer.cropAndTransform(
+                sourceBitmap = cardBmp,
+                pixelCorners = editorView.getPixelCorners(),
+                rotationDegrees = editorView.rotationDegrees,
+                isFlippedH = editorView.isFlippedHorizontal,
+                isFlippedV = editorView.isFlippedVertical
+            )
+
+            cameraOverlay.stopOverlayRendering(false)
+            onConfirm(flattenedBitmap)
+        }
+        btnRetake.setOnClickListener {
+            dialog.dismiss()
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            isCapturing = false
+            showSourceSelectionDialog()
+        }
+        dialog.show()
+
+      /*  AlertDialog.Builder(this)
             .setTitle("Adjust CNIC Corners")
             .setView(dialogView)
             .setCancelable(false)
@@ -758,7 +804,7 @@ class IdCardOcrPreviewActivity : AppCompatActivity() {
                 isCapturing = false
                 showSourceSelectionDialog()
             }
-            .show()
+            .show()*/
     }
 
     private fun showLineExtractionDialog(

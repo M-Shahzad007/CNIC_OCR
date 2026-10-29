@@ -27,6 +27,8 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import pk.pitb.cnic_ocr_detection.OCRManager
 import pk.pitb.cnic_ocr_detection.callbacks.OcrDetectionCallback
 import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.CnicFields
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.urdu_keyboard.DraggableFloatingLayout
+import pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.urdu_keyboard.UrduKeyboardHelper
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min

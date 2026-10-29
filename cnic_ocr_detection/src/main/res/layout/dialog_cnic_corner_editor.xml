@@ -1,49 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="#121212"
-    android:orientation="vertical"
-    android:padding="8dp">
+    android:layout_height="match_parent"
+    android:background="#0F1115">
 
-    <!-- Interactive Corner Drag Editor View -->
-    <pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.custom_croper.CnicCornerEditorView
-        android:id="@+id/dialogCornerEditorView"
-        android:layout_width="match_parent"
-        android:layout_height="360dp" />
-
-    <!-- Control Tools -->
+    <!-- Header Bar -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/headerContainer"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Adjust Document Bounds"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Drag the four corners to align with the CNIC edges"
+            android:textColor="#9E9E9E"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Canvas Frame with Subtle Border -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardEditorContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginVertical="8dp"
+        app:cardBackgroundColor="#181A20"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="#2A2D36"
+        app:strokeWidth="1dp"
+        app:layout_constraintBottom_toTopOf="@+id/transformationTools"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/headerContainer">
+
+        <pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.custom_croper.CnicCornerEditorView
+            android:id="@+id/dialogCornerEditorView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Image Transformation Quick Tools -->
+    <LinearLayout
+        android:id="@+id/transformationTools"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_rounded_glass_panel"
         android:gravity="center"
         android:orientation="horizontal"
-        android:paddingTop="8dp">
+        android:padding="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/actionsContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDialogRotate"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
-            android:text="Rotate 90°"
-            android:textColor="#FFFFFF" />
+            style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:icon="@drawable/rotate_right"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDialogFlipH"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
-            android:text="Flip H"
-            android:textColor="#FFFFFF" />
+            style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            app:icon="@drawable/flip_horizontally"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDialogFlipV"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Flip V"
-            android:textColor="#FFFFFF" />
+            style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            app:icon="@drawable/flip_vertical"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
     </LinearLayout>
-</LinearLayout>
+
+    <!-- Bottom Action Buttons -->
+    <LinearLayout
+        android:id="@+id/actionsContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRetake"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="Retake"
+            android:textColor="#E2E2E6"
+            app:cornerRadius="12dp"
+            app:strokeColor="#3F4452" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnProcess"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1.5"
+            android:text="Crop &amp; Process"
+            android:textColor="#FFFFFF"
+            app:backgroundTint="#2563EB"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/check"
+            app:iconGravity="textStart" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,4 +1,4 @@
-package com.example.cnic_ocr
+package pk.pitb.cnic_ocr_detection.views.urduExtractor.helper.urdu_keyboard
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -9,6 +9,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -137,7 +138,7 @@ class DraggableFloatingLayout @JvmOverloads constructor(
 
     fun setContentView(contentView: View) {
         if (contentView.parent != null) {
-            (contentView.parent as? android.view.ViewGroup)?.removeView(contentView)
+            (contentView.parent as? ViewGroup)?.removeView(contentView)
         }
         mainContainer.addView(contentView)
     }
